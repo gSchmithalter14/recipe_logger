@@ -1,3 +1,5 @@
+const catchAsync = require('../utils/catchAsync');
+
 exports.getRecipes = (req, res, next) => {
   res.status(200).json({
     success: true,
