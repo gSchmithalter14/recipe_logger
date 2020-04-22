@@ -1,5 +1,6 @@
 const Recipe = require('../models/Recipe');
 const catchAsync = require('../utils/catchAsync');
+const ErrorResponse = require('../utils/errorResponse');
 
 //@desc    Get all recipes
 //@route   GET /api/v1/recipes
@@ -21,6 +22,10 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
 //@access  Public
 exports.getRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
+
+  if (!recipe) {
+    return next(new ErrorResponse('No recipe found with that ID', 404));
+  }
 
   res.status(200).json({
     status: 'success',
@@ -54,6 +59,10 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
     runValidators: true
   });
 
+  if (!recipe) {
+    return next(new ErrorResponse('No recipe found with that ID', 404));
+  }
+
   res.status(200).json({
     status: 'success',
     message: 'Recipe successfully updated',
@@ -67,7 +76,11 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
 //@route   DELETE /api/v1/recipes/:id
 //@access  Private
 exports.deleteRecipe = catchAsync(async (req, res, next) => {
-  await Recipe.findByIdAndDelete(req.params.id);
+  const recipe = await Recipe.findByIdAndDelete(req.params.id);
+
+  if (!recipe) {
+    return next(new ErrorResponse('No recipe found with that ID', 404));
+  }
 
   res.status(200).json({
     status: 'success',
