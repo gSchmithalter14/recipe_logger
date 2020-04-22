@@ -4,31 +4,36 @@ const Schema = mongoose.Schema;
 const recipeSchema = new Schema({
   name: {
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'Name is required']
   },
   description: {
     type: String,
     required: [true, 'Description is required'],
+    trim: true
   },
   duration: {
-    type: String,
+    type: String
   },
   image: {
-    type: String,
+    type: String
   },
   owner: {
     id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'User'
     },
-    username: String,
+    username: String
   },
   steps: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Step',
-    },
+      ref: 'Step'
+    }
   ],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 module.exports = mongoose.model('Recipe', recipeSchema);

@@ -22,13 +22,13 @@ const sendError = (err, res) => {
     res.status(err.statusCode).json({
       error: err,
       status: err.status,
-      message: err.message,
+      message: err.message
     });
   } else {
     console.error('ERROR ❌❌❌', err);
     res.status(500).json({
       status: 'error',
-      message: 'Something went very wrong',
+      message: 'Something went very wrong'
     });
   }
 };
