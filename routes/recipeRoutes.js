@@ -7,7 +7,7 @@ const {
   getRecipe,
   createRecipe,
   updateRecipe,
-  deleteRecipe,
+  deleteRecipe
 } = recipeController;
 
 const router = express.Router();

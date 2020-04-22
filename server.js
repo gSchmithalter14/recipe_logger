@@ -7,7 +7,7 @@ dotenv.config({ path: './config.env' });
 colors.setTheme({
   error: ['red', 'bold', 'underline'],
   serverConnected: ['yellow', 'bold'],
-  dbConnected: ['cyan', 'underline', 'bold'],
+  dbConnected: ['cyan', 'underline', 'bold']
 });
 
 const app = require('./app');
@@ -18,7 +18,7 @@ const connectDB = async () => {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
-    useUnifiedTopology: true,
+    useUnifiedTopology: true
   });
 
   console.log(`MongoDB Connected: ${conn.connection.host}`.dbConnected);
