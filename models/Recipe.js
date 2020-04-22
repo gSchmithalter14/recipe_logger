@@ -1,15 +1,28 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const validator = require('validator');
 
 const recipeSchema = new Schema({
   name: {
     type: String,
-    required: [true, 'Name is required']
+    required: [true, 'Name is required'],
+    trim: true,
+    maxlength: [40, 'Recipe name must have less or equal than 40 characters'],
+    validate: {
+      validator: function (value) {
+        return validator.isAlpha(value.split(' ').join(''));
+      },
+      message: 'Tour name must only contain letters.'
+    }
   },
   description: {
     type: String,
     required: [true, 'Description is required'],
-    trim: true
+    trim: true,
+    maxlength: [
+      200,
+      'A recipe description must have less or equal than 200 characters'
+    ]
   },
   duration: {
     type: String
