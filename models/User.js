@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -18,7 +20,13 @@ const userSchema = new Schema({
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Password confirm is required']
+    required: [true, 'Password confirm is required'],
+    validate: {
+      validator: function (value) {
+        return value === this.password;
+      },
+      message: 'Passwords are not the same'
+    }
   },
   recipes: [
     {
@@ -31,6 +39,12 @@ const userSchema = new Schema({
     enum: ['user', 'admin'],
     default: 'user'
   }
+});
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password')) return next();
+
+  next();
 });
 
 module.exports = mongoose.model('User', userSchema);
