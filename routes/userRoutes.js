@@ -5,11 +5,12 @@ const authController = require('../controllers/authController');
 
 const { getUsers, getUser } = userController;
 
-const { register } = authController;
+const { register, login } = authController;
 
 const router = express.Router();
 
 router.post('/register', register);
+router.post('/login', login);
 
 router.route('/').get(getUsers);
 
