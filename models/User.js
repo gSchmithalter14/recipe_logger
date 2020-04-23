@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const validator = require('validator');
 
 const userSchema = new Schema({
   username: {
@@ -10,15 +11,18 @@ const userSchema = new Schema({
     type: String,
     unique: true,
     required: [true, 'Email is required'],
+    lowercase: true,
+    validate: [validator.isEmail, 'Please provide a valid email'],
     match: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
   },
   password: {
     type: String,
-    required: [true, 'Password is required']
+    required: [true, 'Password is required'],
+    minlength: 8
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Password confirm is required']
+    required: [true, 'Please confirm your password']
   },
   recipes: [
     {
