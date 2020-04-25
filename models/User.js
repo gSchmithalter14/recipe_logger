@@ -22,15 +22,14 @@ const userSchema = new Schema({
     select: false
   },
   passwordConfirm: {
-    type: String,
-    required: [true, 'Password confirm is required'],
-    validate: {
-      validator: function (value) {
-        return value === this.password;
-      },
-      message: 'Passwords are not the same'
-    },
-    required: [true, 'Please confirm your password']
+    type: String
+    // validate: {
+    //   validator: function(value) {
+    //     return value === this.password;
+    //   },
+    //   message: 'Passwords are not the same'
+    // },
+    // required: [true, 'Please confirm your password']
   },
   passwordChangedAt: Date,
   recipes: [
@@ -46,7 +45,7 @@ const userSchema = new Schema({
   }
 });
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
   // only run if password was modified
   if (!this.isModified('password')) return next();
 
@@ -57,15 +56,15 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-//instance method
-userSchema.methods.matchPassword = async function (
+//instance methods
+userSchema.methods.matchPassword = async function(
   enteredPassword,
   userPassword
 ) {
   return await bcrypt.compare(enteredPassword, userPassword);
 };
 
-userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -77,6 +76,34 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   }
 
   return false;
+};
+
+userSchema.methods.addedRecipe = async function(recipeId) {
+  try {
+    if (this.recipes.indexOf(recipeId) !== -1) {
+      return false;
+    }
+    this.recipes.push(recipeId);
+    await this.save();
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+userSchema.methods.removedRecipe = async function(recipeId) {
+  try {
+    if (this.recipes.indexOf(recipeId) === -1) {
+      return false;
+    }
+    this.recipes.splice(this.recipes.indexOf(this._id), 1);
+    await this.save();
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);
