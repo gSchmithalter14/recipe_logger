@@ -12,7 +12,7 @@ const recipeSchema = new Schema({
       validator: function(value) {
         return validator.isAlpha(value.split(' ').join(''));
       },
-      message: 'Tour name must only contain letters.'
+      message: 'Recipe name must only contain letters.'
     }
   },
   description: {
@@ -48,5 +48,17 @@ const recipeSchema = new Schema({
     default: Date.now
   }
 });
+
+recipeSchema.methods.assignedOwner = async function(user) {
+  try {
+    this.owner.id = user._id;
+    this.owner.username = user.username;
+    await this.save();
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
 
 module.exports = mongoose.model('Recipe', recipeSchema);

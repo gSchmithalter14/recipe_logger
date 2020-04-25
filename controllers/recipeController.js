@@ -40,6 +40,10 @@ exports.getRecipe = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.createRecipe = catchAsync(async (req, res, next) => {
   const newRecipe = await Recipe.create(req.body);
+  const assignedRecipeOwner = await newRecipe.assignedOwner(req.user);
+  if (!assignedRecipeOwner) {
+    return next(new ErrorResponse('Error when assigning owner to recipe', 400));
+  }
 
   res.status(201).json({
     status: 'success',
