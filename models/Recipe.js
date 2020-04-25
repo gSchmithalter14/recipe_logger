@@ -9,7 +9,7 @@ const recipeSchema = new Schema({
     trim: true,
     maxlength: [40, 'Recipe name must have less or equal than 40 characters'],
     validate: {
-      validator: function (value) {
+      validator: function(value) {
         return validator.isAlpha(value.split(' ').join(''));
       },
       message: 'Tour name must only contain letters.'
