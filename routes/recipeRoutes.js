@@ -17,13 +17,13 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(protect, restrictTo('user'), getRecipes)
-  .post(protect, restrictTo('user'), createRecipe);
+  .get(protect, restrictTo('user', 'admin'), getRecipes)
+  .post(protect, restrictTo('user', 'admin'), createRecipe);
 
 router
   .route('/:id')
-  .get(getRecipe)
-  .patch(updateRecipe)
-  .delete(deleteRecipe);
+  .get(protect, restrictTo('user', 'admin'), getRecipe)
+  .patch(protect, restrictTo('user', 'admin'), updateRecipe)
+  .delete(protect, restrictTo('user', 'admin'), deleteRecipe);
 
 module.exports = router;
