@@ -1,4 +1,5 @@
 const Recipe = require('../models/Recipe');
+const User = require('../models/User');
 const catchAsync = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
 
@@ -40,9 +41,17 @@ exports.getRecipe = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.createRecipe = catchAsync(async (req, res, next) => {
   const newRecipe = await Recipe.create(req.body);
-  const assignedRecipeOwner = await newRecipe.assignedOwner(req.user);
-  if (!assignedRecipeOwner) {
+
+  const assignedOwnerToRecipe = await newRecipe.assignedOwner(req.user);
+  if (!assignedOwnerToRecipe) {
     return next(new ErrorResponse('Error when assigning owner to recipe', 400));
+  }
+
+  const user = await User.findById(req.user._id);
+  const assignedRecipeToUser = user.addedRecipe(newRecipe._id);
+
+  if (!assignedRecipeToUser) {
+    return next(new ErrorResponse('Error when assigning recipe to user', 400));
   }
 
   res.status(201).json({
@@ -81,9 +90,15 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.deleteRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findByIdAndDelete(req.params.id);
-
   if (!recipe) {
     return next(new ErrorResponse('No recipe found with that ID', 404));
+  }
+
+  const user = await User.findById(req.user._id);
+  const removedRecipeFromUser = await user.removedRecipe(recipe._id);
+
+  if (!removedRecipeFromUser) {
+    return next(new ErrorResponse('Error when removing recipe reference', 400));
   }
 
   res.status(200).json({
