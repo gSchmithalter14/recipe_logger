@@ -39,8 +39,14 @@ const recipeSchema = new Schema({
   },
   steps: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Step'
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Step'
+      },
+      number: {
+        type: Number,
+        default: 1
+      }
     }
   ],
   createdAt: {
