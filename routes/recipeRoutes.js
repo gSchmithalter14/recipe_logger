@@ -1,6 +1,7 @@
 const express = require('express');
 
 const recipeController = require('../controllers/recipeController');
+const authController = require('../controllers/authController');
 
 const {
   getRecipes,
@@ -10,12 +11,14 @@ const {
   deleteRecipe
 } = recipeController;
 
+const { protect, restrictTo } = authController;
+
 const router = express.Router();
 
 router
   .route('/')
-  .get(getRecipes)
-  .post(createRecipe);
+  .get(protect, restrictTo('user'), getRecipes)
+  .post(protect, restrictTo('user'), createRecipe);
 
 router
   .route('/:id')

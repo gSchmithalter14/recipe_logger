@@ -13,6 +13,11 @@ app.use(express.json());
 
 app.use(morgan('dev'));
 
+// app.use((req, res, next) => {
+//   console.log(req.headers);
+//   next();
+// });
+
 // ROUTES
 app.use('/api/v1/recipes', recipeRouter);
 app.use('/api/v1/users', userRouter);

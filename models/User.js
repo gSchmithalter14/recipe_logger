@@ -32,6 +32,7 @@ const userSchema = new Schema({
     },
     required: [true, 'Please confirm your password']
   },
+  passwordChangedAt: Date,
   recipes: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -62,6 +63,20 @@ userSchema.methods.matchPassword = async function (
   userPassword
 ) {
   return await bcrypt.compare(enteredPassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    // console.log(JWTTimestamp, changedTimeStamp);
+
+    return JWTTimestamp < changedTimeStamp;
+  }
+
+  return false;
 };
 
 module.exports = mongoose.model('User', userSchema);
