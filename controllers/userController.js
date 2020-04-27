@@ -20,7 +20,7 @@ exports.getUsers = catchAsynch(async (req, res, next) => {
 //@route   GET /api/v1/users/:id
 //@access  Public
 exports.getUser = catchAsynch(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.id).populate('recipes');
 
   if (!user) {
     return next(new ErrorResponse('No user found with that ID', 404));
