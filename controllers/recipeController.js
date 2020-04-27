@@ -40,19 +40,23 @@ exports.getRecipe = catchAsync(async (req, res, next) => {
 //@route   POST /api/v1/recipes
 //@access  Private
 exports.createRecipe = catchAsync(async (req, res, next) => {
+  if (!req.body.createdBy) req.body.createdBy = req.user._id;
+
   const newRecipe = await Recipe.create(req.body);
 
-  const assignedOwnerToRecipe = await newRecipe.assignedOwner(req.user);
-  if (!assignedOwnerToRecipe) {
-    return next(new ErrorResponse('Error when assigning owner to recipe', 400));
-  }
+  // const userID = await User.findById(req.user._id);
 
-  const user = await User.findById(req.user._id);
-  const assignedRecipeToUser = user.addedRecipe(newRecipe._id);
+  // const assignedOwnerToRecipe = await newRecipe.assignedOwner(req.user);
+  // if (!assignedOwnerToRecipe) {
+  //   return next(new ErrorResponse('Error when assigning owner to recipe', 400));
+  // }
 
-  if (!assignedRecipeToUser) {
-    return next(new ErrorResponse('Error when assigning recipe to user', 400));
-  }
+  // const user = await User.findById(req.user._id);
+  // const assignedRecipeToUser = user.addedRecipe(newRecipe._id);
+
+  // if (!assignedRecipeToUser) {
+  //   return next(new ErrorResponse('Error when assigning recipe to user', 400));
+  // }
 
   res.status(201).json({
     status: 'success',

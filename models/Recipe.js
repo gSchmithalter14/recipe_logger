@@ -31,13 +31,6 @@ const recipeSchema = new Schema(
     image: {
       type: String
     },
-    owner: {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      username: String
-    },
     createdBy: {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
@@ -62,16 +55,24 @@ recipeSchema.virtual('steps', {
   localField: '_id'
 });
 
-recipeSchema.methods.assignedOwner = async function (user) {
-  try {
-    this.owner.id = user._id;
-    this.owner.username = user.username;
-    await this.save();
-    return true;
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
-};
+recipeSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'createdBy',
+    select: 'username'
+  });
+  next();
+});
+
+// recipeSchema.methods.assignedOwner = async function (user) {
+//   try {
+//     this.owner.id = user._id;
+//     this.owner.username = user.username;
+//     await this.save();
+//     return true;
+//   } catch (err) {
+//     console.log(err);
+//     return false;
+//   }
+// };
 
 module.exports = mongoose.model('Recipe', recipeSchema);
