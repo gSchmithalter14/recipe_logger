@@ -24,6 +24,7 @@ const {
 
 const router = express.Router();
 
+// Recipe Routes
 router
   .route('/')
   .get(protect, restrictTo('user', 'admin'), getRecipes)
@@ -35,6 +36,7 @@ router
   .patch(protect, restrictTo('user', 'admin'), updateRecipe)
   .delete(protect, restrictTo('user', 'admin'), deleteRecipe);
 
+// Step Routes
 router
   .route('/:id/steps')
   .get(protect, restrictTo('user', 'admin'), getSteps)

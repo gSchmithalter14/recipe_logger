@@ -1,4 +1,4 @@
-const Recipe = require('../models/Recipe');
+// const Recipe = require('../models/Recipe');
 const Step = require('../models/Step');
 const catchAsync = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
@@ -7,8 +7,12 @@ const ErrorResponse = require('../utils/errorResponse');
 //@route   GET /api/v1/recipes/:id/steps
 //@access  Private
 exports.getSteps = catchAsync(async (req, res, next) => {
-  const recipe = await Recipe.findById(req.params.id).populate('steps');
-  const steps = recipe.steps;
+  let filter = {};
+  if (req.params.id) filter = { recipe: req.params.id };
+  // const recipe = await Recipe.findById(req.params.id).populate('steps');
+  // const steps = recipe.steps;
+
+  const steps = await Step.find(filter);
 
   res.status(200).json({
     status: 'success',
@@ -23,6 +27,8 @@ exports.getSteps = catchAsync(async (req, res, next) => {
 //@route   POST /api/v1/recipes/:id/steps
 //@access  Private
 exports.createStep = catchAsync(async (req, res, next) => {
+  if (!req.body.recipe) req.body.recipe = req.params.id;
+
   const newStep = await Step.create(req.body);
 
   res.status(201).json({
