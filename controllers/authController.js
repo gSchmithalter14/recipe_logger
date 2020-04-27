@@ -1,6 +1,7 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Recipe = require('../models/Recipe');
 const catchAsynch = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
 
@@ -112,4 +113,14 @@ exports.restrictTo = (...roles) => {
     }
     next();
   };
+};
+
+exports.checkIfAuthor = async (req, res, next) => {
+  const recipe = await Recipe.findById(req.params.id);
+
+  if (!(req.user._id.toString() === recipe.createdBy._id.toString())) {
+    return next(new ErrorResponse('Invalid user', 403));
+  }
+
+  next();
 };

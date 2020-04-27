@@ -4,7 +4,7 @@ const recipeController = require('../controllers/recipeController');
 const authController = require('../controllers/authController');
 const stepController = require('../controllers/stepController');
 
-const { protect, restrictTo } = authController;
+const { protect, restrictTo, checkIfAuthor } = authController;
 
 const {
   getRecipes,
@@ -33,8 +33,8 @@ router
 router
   .route('/:id')
   .get(protect, restrictTo('user', 'admin'), getRecipe)
-  .patch(protect, restrictTo('user', 'admin'), updateRecipe)
-  .delete(protect, restrictTo('user', 'admin'), deleteRecipe);
+  .patch(protect, restrictTo('user', 'admin'), checkIfAuthor, updateRecipe)
+  .delete(protect, restrictTo('user', 'admin'), checkIfAuthor, deleteRecipe);
 
 // Step Routes
 router
