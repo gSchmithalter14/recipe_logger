@@ -23,9 +23,9 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
 //@access  Public
 exports.getRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id)
-    .populate('steps')
-    .populate('ingredients')
-    .populate('equipment');
+    .populate({ path: 'steps', select: 'title description' })
+    .populate({ path: 'ingredients', select: 'name' })
+    .populate({ path: 'equipment', select: 'name' });
 
   if (!recipe) {
     return next(new ErrorResponse('No recipe found with that ID', 404));
@@ -96,20 +96,83 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
 //@route   DELETE /api/v1/recipes/:id
 //@access  Private
 exports.deleteRecipe = catchAsync(async (req, res, next) => {
-  const recipe = await Recipe.findByIdAndDelete(req.params.id);
+  const recipe = await Recipe.findById(req.params.id);
+
   if (!recipe) {
     return next(new ErrorResponse('No recipe found with that ID', 404));
   }
 
-  const user = await User.findById(req.user._id);
-  const removedRecipeFromUser = await user.removedRecipe(recipe._id);
+  // const user = await User.findById(req.user._id);
+  // const removedRecipeFromUser = await user.removedRecipe(recipe._id);
 
-  if (!removedRecipeFromUser) {
-    return next(new ErrorResponse('Error when removing recipe reference', 400));
-  }
+  // if (!removedRecipeFromUser) {
+  //   return next(new ErrorResponse('Error when removing recipe reference', 400));
+  // }
+
+  recipe.remove();
 
   res.status(200).json({
     status: 'success',
-    message: 'Recipe deleted'
+    message: 'Recipe successfully deleted'
+  });
+});
+
+//@desc    Like a recipe
+//@route   PUT /api/v1/recipes/like/:id
+//@access  Private
+exports.likeRecipe = catchAsync(async (req, res, next) => {
+  const recipe = await Recipe.findById(req.params.id);
+
+  // Check if the psot has already been liked
+  if (
+    recipe.likes.filter((like) => like.user.toString() === req.user.id).length >
+    0
+  ) {
+    return next(new ErrorResponse('Recipe already liked', 400));
+  }
+
+  recipe.likes.unshift({ user: req.user.id });
+
+  await recipe.save();
+
+  const likes = recipe.likes.length;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      likes
+    }
+  });
+});
+
+//@desc    Unlike a recipe
+//@route   PUT /api/v1/recipes/unlike/:id
+//@access  Private
+exports.unlikeRecipe = catchAsync(async (req, res, next) => {
+  const recipe = await Recipe.findById(req.params.id);
+
+  // Check if the psot has already been liked
+  if (
+    recipe.likes.filter((like) => like.user.toString() === req.user.id)
+      .length === 0
+  ) {
+    return next(new ErrorResponse('Recipe has not yet been liked', 400));
+  }
+
+  const removeIndex = recipe.likes.map((like) =>
+    like.user.toString().indexOf(req.user.id)
+  );
+
+  recipe.likes.splice(removeIndex, 1);
+
+  await recipe.save();
+
+  const likes = recipe.likes.length;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      likes
+    }
   });
 });

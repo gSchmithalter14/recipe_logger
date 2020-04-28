@@ -13,7 +13,9 @@ const {
   getRecipe,
   createRecipe,
   updateRecipe,
-  deleteRecipe
+  deleteRecipe,
+  likeRecipe,
+  unlikeRecipe
 } = recipeController;
 
 const {
@@ -53,6 +55,10 @@ router
   .get(protect, restrictTo('user', 'admin'), getRecipe)
   .patch(protect, restrictTo('user', 'admin'), checkIfAuthor, updateRecipe)
   .delete(protect, restrictTo('user', 'admin'), checkIfAuthor, deleteRecipe);
+
+router.route('/like/:id').put(protect, restrictTo('user'), likeRecipe);
+
+router.route('/unlike/:id').put(protect, restrictTo('user'), unlikeRecipe);
 
 // Step Routes
 router

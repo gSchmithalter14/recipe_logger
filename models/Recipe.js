@@ -32,14 +32,22 @@ const recipeSchema = new Schema(
       type: String
     },
     createdBy: {
-      type: mongoose.Schema.ObjectId,
+      type: Schema.ObjectId,
       ref: 'User',
       required: [true, 'Recipe must belong to a user']
     },
     createdAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    likes: [
+      {
+        user: {
+          type: Schema.ObjectId,
+          ref: 'User'
+        }
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
@@ -47,7 +55,15 @@ const recipeSchema = new Schema(
   }
 );
 
-// Parent referencing, the parent does not know about its children (step) sso we use:
+// Cascade delete steps, equipment, ingredients when recipe is deleted
+recipeSchema.pre('remove', async function (next) {
+  await this.model('Step').deleteMany({ recipe: this._id });
+  await this.model('Equipment').deleteMany({ recipe: this._id });
+  await this.model('Ingredient').deleteMany({ recipe: this._id });
+  next();
+});
+
+// Parent referencing, the parent does not know about its children (step) so we use:
 // Virtual populate
 recipeSchema.virtual('steps', {
   ref: 'Step',
