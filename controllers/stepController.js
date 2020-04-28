@@ -9,8 +9,6 @@ const ErrorResponse = require('../utils/errorResponse');
 exports.getSteps = catchAsync(async (req, res, next) => {
   let filter = {};
   if (req.params.id) filter = { recipe: req.params.id };
-  // const recipe = await Recipe.findById(req.params.id).populate('steps');
-  // const steps = recipe.steps;
 
   const steps = await Step.find(filter);
 

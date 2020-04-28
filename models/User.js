@@ -70,7 +70,6 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
       this.passwordChangedAt.getTime() / 1000,
       10
     );
-    // console.log(JWTTimestamp, changedTimeStamp);
 
     return JWTTimestamp < changedTimeStamp;
   }
@@ -84,33 +83,5 @@ userSchema.virtual('recipes', {
   foreignField: 'createdBy',
   localField: '_id'
 });
-
-// userSchema.methods.addedRecipe = async function (recipeId) {
-//   try {
-//     if (this.recipes.indexOf(recipeId) !== -1) {
-//       return false;
-//     }
-//     this.recipes.push(recipeId);
-//     await this.save();
-//     return true;
-//   } catch (err) {
-//     console.log(err);
-//     return false;
-//   }
-// };
-
-// userSchema.methods.removedRecipe = async function (recipeId) {
-//   try {
-//     if (this.recipes.indexOf(recipeId) === -1) {
-//       return false;
-//     }
-//     this.recipes.splice(this.recipes.indexOf(this._id), 1);
-//     await this.save();
-//     return true;
-//   } catch (err) {
-//     console.log(err);
-//     return false;
-//   }
-// };
 
 module.exports = mongoose.model('User', userSchema);

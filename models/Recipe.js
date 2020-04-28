@@ -91,16 +91,4 @@ recipeSchema.pre(/^find/, function (next) {
   next();
 });
 
-// recipeSchema.methods.assignedOwner = async function (user) {
-//   try {
-//     this.owner.id = user._id;
-//     this.owner.username = user.username;
-//     await this.save();
-//     return true;
-//   } catch (err) {
-//     console.log(err);
-//     return false;
-//   }
-// };
-
 module.exports = mongoose.model('Recipe', recipeSchema);
