@@ -47,10 +47,22 @@ const recipeSchema = new Schema(
   }
 );
 
-// Parent referencing, the parent does not know about its children (steps) so we use:
+// Parent referencing, the parent does not know about its children (step) sso we use:
 // Virtual populate
 recipeSchema.virtual('steps', {
   ref: 'Step',
+  foreignField: 'recipe',
+  localField: '_id'
+});
+
+recipeSchema.virtual('equipment', {
+  ref: 'Equipment',
+  foreignField: 'recipe',
+  localField: '_id'
+});
+
+recipeSchema.virtual('ingredients', {
+  ref: 'Ingredient',
   foreignField: 'recipe',
   localField: '_id'
 });

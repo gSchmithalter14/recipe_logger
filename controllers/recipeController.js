@@ -22,7 +22,10 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
 //@route   GET /api/v1/recipes/:id
 //@access  Public
 exports.getRecipe = catchAsync(async (req, res, next) => {
-  const recipe = await Recipe.findById(req.params.id).populate('steps');
+  const recipe = await Recipe.findById(req.params.id)
+    .populate('steps')
+    .populate('ingredients')
+    .populate('equipment');
 
   if (!recipe) {
     return next(new ErrorResponse('No recipe found with that ID', 404));
