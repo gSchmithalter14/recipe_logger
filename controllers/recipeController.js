@@ -47,20 +47,6 @@ exports.createRecipe = catchAsync(async (req, res, next) => {
 
   const newRecipe = await Recipe.create(req.body);
 
-  // const userID = await User.findById(req.user._id);
-
-  // const assignedOwnerToRecipe = await newRecipe.assignedOwner(req.user);
-  // if (!assignedOwnerToRecipe) {
-  //   return next(new ErrorResponse('Error when assigning owner to recipe', 400));
-  // }
-
-  // const user = await User.findById(req.user._id);
-  // const assignedRecipeToUser = user.addedRecipe(newRecipe._id);
-
-  // if (!assignedRecipeToUser) {
-  //   return next(new ErrorResponse('Error when assigning recipe to user', 400));
-  // }
-
   res.status(201).json({
     status: 'success',
     message: 'Recipe successfully created',
@@ -102,13 +88,6 @@ exports.deleteRecipe = catchAsync(async (req, res, next) => {
     return next(new ErrorResponse('No recipe found with that ID', 404));
   }
 
-  // const user = await User.findById(req.user._id);
-  // const removedRecipeFromUser = await user.removedRecipe(recipe._id);
-
-  // if (!removedRecipeFromUser) {
-  //   return next(new ErrorResponse('Error when removing recipe reference', 400));
-  // }
-
   recipe.remove();
 
   res.status(200).json({
@@ -122,6 +101,8 @@ exports.deleteRecipe = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.likeRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
+
+  console.log(recipe);
 
   // Check if the psot has already been liked
   if (
