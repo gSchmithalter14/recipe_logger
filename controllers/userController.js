@@ -1,5 +1,17 @@
 const User = require('../models/User');
 const catchAsynch = require('../utils/catchAsync');
+const ErrorResponse = require('../utils/errorResponse');
+
+//@desc filter request body to return only email and username. This way users cannot update fields
+//they should not be updating like role
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach(el => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  console.log(newObj);
+  return newObj;
+};
 
 //@desc    Get all users
 //@route   GET /api/v1/users
@@ -33,6 +45,32 @@ exports.getUser = catchAsynch(async (req, res, next) => {
     status: 'success',
     data: {
       user
+    }
+  });
+});
+
+exports.updateMe = catchAsynch(async (req, res, next) => {
+  //create error if users POST password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new ErrorResponse(
+        'This route is not for password updates. Please use, update my password',
+        400
+      )
+    );
+  }
+  //filtered out unwanted fields that are not allowed to be updated
+  const filteredBody = filterObj(req.body, 'username', 'email');
+  //update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser
     }
   });
 });

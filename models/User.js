@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
@@ -23,16 +24,18 @@ const userSchema = new Schema(
       select: false
     },
     passwordConfirm: {
-      type: String
-      // validate: {
-      //   validator: function(value) {
-      //     return value === this.password;
-      //   },
-      //   message: 'Passwords are not the same'
-      // },
-      // required: [true, 'Please confirm your password']
+      type: String,
+      validate: {
+        validator: function(value) {
+          return value === this.password;
+        },
+        message: 'Passwords are not the same'
+      },
+      required: [true, 'Please confirm your password']
     },
     passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     role: {
       type: String,
       enum: ['user', 'admin'],
@@ -45,7 +48,7 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
   // only run if password was modified
   if (!this.isModified('password')) return next();
 
@@ -56,15 +59,22 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  //if password wasn't modified or when creating a new instance don't manipulate passwordChangedAt property
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 //instance methods
-userSchema.methods.matchPassword = async function (
+userSchema.methods.matchPassword = async function(
   enteredPassword,
   userPassword
 ) {
   return await bcrypt.compare(enteredPassword, userPassword);
 };
 
-userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -83,5 +93,20 @@ userSchema.virtual('recipes', {
   foreignField: 'createdBy',
   localField: '_id'
 });
+
+//Create password reset token
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  console.log({ resetToken }, this.passwordResetToken);
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
 
 module.exports = mongoose.model('User', userSchema);
