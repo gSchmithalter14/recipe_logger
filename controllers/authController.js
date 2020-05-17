@@ -173,7 +173,7 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
   });
 });
 
-exports.resetPassword = async (req, res, next) => {
+exports.resetPassword = catchAsynch(async (req, res, next) => {
   //get user based on token
   const hashedToken = crypto
     .createHash('sha256')
@@ -189,6 +189,7 @@ exports.resetPassword = async (req, res, next) => {
   if (!user) {
     return next(new ErrorResponse('Token is invalid or has expired', 400));
   }
+
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
@@ -205,15 +206,15 @@ exports.resetPassword = async (req, res, next) => {
     status: 'success',
     token
   });
-};
+});
 
-exports.updatePassword = async (req, res, next) => {
+exports.updatePassword = catchAsynch(async (req, res, next) => {
   //get user from collection
   const user = await User.findById(req.user.id).select('+password');
 
   //check if posted password is correct
   if (!(await user.matchPassword(req.body.passwordCurrent, user.password))) {
-    return next(ErrorResponse('Provided password is incorrect', 400));
+    return next(new ErrorResponse('Provided password is incorrect', 400));
   }
   //if correct update it
   user.password = req.body.password;
@@ -229,4 +230,4 @@ exports.updatePassword = async (req, res, next) => {
     status: 'success',
     token
   });
-};
+});
