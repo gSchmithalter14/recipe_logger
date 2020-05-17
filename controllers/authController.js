@@ -19,6 +19,8 @@ exports.register = catchAsynch(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt
   });
 
+  console.log(newUser);
+
   const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
   });
