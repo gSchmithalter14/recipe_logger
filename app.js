@@ -1,6 +1,12 @@
 const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize');
+const cors = require('cors');
+const xss = require('xss-clean');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 
 const ErrorResponse = require('./utils/errorResponse');
 const globalErrorHandler = require('./controllers/errorController');
@@ -16,12 +22,29 @@ app.use(express.json());
 // Cookie parser
 app.use(cookieParser());
 
-app.use(morgan('dev'));
+// Sanitize data
+app.use(mongoSanitize());
 
-// app.use((req, res, next) => {
-//   console.log(req.headers);
-//   next();
-// });
+// Set security headers
+app.use(helmet());
+
+// Prevent coss site scripting - XSS
+app.use(xss());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 100, //10 minutes
+  max: 100 //100 requests
+});
+
+app.use(limiter);
+
+// Prevent http param pollution
+app.use(hpp());
+
+app.use(cors());
+
+app.use(morgan('dev'));
 
 // ROUTES
 app.use('/api/v1/auth', authRouter);

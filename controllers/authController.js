@@ -146,6 +146,7 @@ exports.isCurrentUser = async (req, res, next) => {
 exports.forgotPassword = catchAsynch(async (req, res, next) => {
   // get user based on email
   const user = await User.findOne({ email: req.body.email });
+
   if (!user) {
     return next(
       new ErrorResponse('There is no user with that email address', 404)
@@ -154,6 +155,7 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
 
   // generate random token
   const resetToken = user.createPasswordResetToken();
+
   await user.save({ validateBeforeSave: false });
 
   // send it as an email
@@ -163,6 +165,7 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
 
   const message = `Forgot your password? Submit a PATCH request with your password and passwordConfirm to: ${resetURL}.\n 
   If you didn't forget your password please disregard this mail`;
+
   try {
     await sendEmail({
       email: user.email,
@@ -172,6 +175,7 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
   } catch (err) {
     user.createPasswordResetToken = undefined;
     user.passwordResetExpires = undefined;
+
     user.save({ validateBeforeSave: false });
 
     return next(
@@ -189,10 +193,10 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
 });
 
 // @desc    Reset password
-// @route   POST /api/v1/auth/resetPassword
+// @route   POST /api/v1/auth/resetPassword/:token
 // @access  Public
 exports.resetPassword = catchAsynch(async (req, res, next) => {
-  // get user based on token
+  // get hashed token
   const hashedToken = crypto
     .createHash('sha256')
     .update(req.params.token)
@@ -215,12 +219,7 @@ exports.resetPassword = catchAsynch(async (req, res, next) => {
   await user.save();
   // update changedPasswordAt property for the user
 
-  const token = user.getSignedJwtToken();
-
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  sendTokenResponse(user, 200, res);
 });
 
 // @desc    Update password
@@ -240,12 +239,7 @@ exports.updatePassword = catchAsynch(async (req, res, next) => {
   user.passwordChangedAt = Date.now() - 1000;
   await user.save();
 
-  const token = user.getSignedJwtToken();
-
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  sendTokenResponse(user, 200, res);
 });
 
 // @desc    Log use out / clears cookie

@@ -53,7 +53,7 @@ userSchema.pre('save', async function (next) {
   // only run if password was modified
   if (!this.isModified('password')) return next();
 
-  //hashing password and delete passwordConfirm
+  // hashing password and delete passwordConfirm
   this.password = await bcrypt.hash(this.password, 10);
   this.passwordConfirm = undefined;
 
@@ -62,7 +62,7 @@ userSchema.pre('save', async function (next) {
 
 userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
-  //if password wasn't modified or when creating a new instance don't manipulate passwordChangedAt property
+  // if password wasn't modified or when creating a new instance don't manipulate passwordChangedAt property
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
@@ -99,22 +99,20 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   return false;
 };
 
-//Virtual populate recipe data to User Model
+// Virtual populate recipe data to User Model
 userSchema.virtual('recipes', {
   ref: 'Recipe',
   foreignField: 'createdBy',
   localField: '_id'
 });
 
-//Create password reset token
+// Create password reset token
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-
-  console.log({ resetToken }, this.passwordResetToken);
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
