@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
@@ -26,7 +27,7 @@ const userSchema = new Schema(
     passwordConfirm: {
       type: String,
       validate: {
-        validator: function(value) {
+        validator: function (value) {
           return value === this.password;
         },
         message: 'Passwords are not the same'
@@ -48,7 +49,7 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // only run if password was modified
   if (!this.isModified('password')) return next();
 
@@ -59,22 +60,33 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
   //if password wasn't modified or when creating a new instance don't manipulate passwordChangedAt property
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
-//instance methods
-userSchema.methods.matchPassword = async function(
+// Model instance methods
+
+// Match user entered password to hashed password in database
+userSchema.methods.matchPassword = async function (
   enteredPassword,
   userPassword
 ) {
   return await bcrypt.compare(enteredPassword, userPassword);
 };
 
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+// Sign JWT and return
+userSchema.methods.getSignedJwtToken = function () {
+  const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN
+  });
+
+  return token;
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -95,7 +107,7 @@ userSchema.virtual('recipes', {
 });
 
 //Create password reset token
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
     .createHash('sha256')

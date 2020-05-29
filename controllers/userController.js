@@ -6,7 +6,7 @@ const ErrorResponse = require('../utils/errorResponse');
 //they should not be updating like role
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
-  Object.keys(obj).forEach(el => {
+  Object.keys(obj).forEach((el) => {
     if (allowedFields.includes(el)) newObj[el] = obj[el];
   });
   console.log(newObj);
@@ -49,6 +49,34 @@ exports.getUser = catchAsynch(async (req, res, next) => {
   });
 });
 
+//@desc    Get current logged in user
+//@route   GET /api/v1/users/me
+//@access  Private
+exports.getMe = catchAsynch(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  console.log(user);
+
+  if (!user) {
+    return next(
+      new ErrorResponse(
+        'You are not logged in! Please log in to get access',
+        401
+      )
+    );
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user
+    }
+  });
+});
+
+//@desc    Get a user by ID
+//@route   GET /api/v1/users/:id
+//@access  Private
 exports.updateMe = catchAsynch(async (req, res, next) => {
   //create error if users POST password data
   if (req.body.password || req.body.passwordConfirm) {

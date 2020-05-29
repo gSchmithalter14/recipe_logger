@@ -7,9 +7,34 @@ const catchAsynch = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
 const sendEmail = require('../utils/email');
 
-//@desc    Register a new user
-//@route   POST /api/v1/users/register
-//@access  Public
+// get token, create cookie, and send response
+const sendTokenResponse = (user, statusCode, res) => {
+  // model method
+  const token = user.getSignedJwtToken();
+
+  const options = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    options.secure = true;
+  }
+
+  res.status(statusCode).cookie('token', token, options).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  });
+};
+
+// @desc    Register a new user
+// @route   POST /api/v1/auth/register
+// @access  Public
 exports.register = catchAsynch(async (req, res, next) => {
   const newUser = await User.create({
     username: req.body.username,
@@ -19,29 +44,17 @@ exports.register = catchAsynch(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt
   });
 
-  console.log(newUser);
-
-  const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
-  });
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser
-    }
-  });
+  sendTokenResponse(newUser, 201, res);
 });
 
-//@desc    Login an existing user
-//@route   POST /api/v1/users/login
-//@access  Public
+// @desc    Login an existing user
+// @route   POST /api/v1/auth/login
+// @access  Public
 exports.login = catchAsynch(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return next(new ErrorResponse('Please provide email and password', 400));
+    return next(new ErrorResponse('Please provide an email and password', 400));
   }
 
   const user = await User.findOne({ email }).select('+password');
@@ -50,17 +63,10 @@ exports.login = catchAsynch(async (req, res, next) => {
     return next(new ErrorResponse('Incorrect email or password', 401));
   }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
-  });
-
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  sendTokenResponse(user, 200, res);
 });
 
-//@desc    Route protection middleware
+// @desc    Route protection middleware
 exports.protect = catchAsynch(async (req, res, next) => {
   let token;
 
@@ -68,7 +74,11 @@ exports.protect = catchAsynch(async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
+    // set token from Bearer token in header
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.token) {
+    // set token from cookie
+    token = req.cookies.token;
   }
 
   if (!token) {
@@ -104,7 +114,7 @@ exports.protect = catchAsynch(async (req, res, next) => {
   next();
 });
 
-//@desc    Authorization - restrict certain routes based on user role
+// @desc    Authorization middleware - restrict certain routes based on user role
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -119,18 +129,22 @@ exports.restrictTo = (...roles) => {
   };
 };
 
-exports.checkIfAuthor = async (req, res, next) => {
+// @desc   Authorization middleware - restrict certain routes if not current logged in user
+exports.isCurrentUser = async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
 
-  if (!(req.user._id.toString() === recipe.createdBy._id.toString())) {
+  if (!(req.user.id.toString() === recipe.createdBy._id.toString())) {
     return next(new ErrorResponse('Invalid user', 403));
   }
 
   next();
 };
 
+// @desc    Forgot password
+// @route   POST /api/v1/auth/forgotPassword
+// @access  Public
 exports.forgotPassword = catchAsynch(async (req, res, next) => {
-  //get user based on email
+  // get user based on email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
     return next(
@@ -138,10 +152,11 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
     );
   }
 
-  //generate random token
+  // generate random token
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
-  //send it as an email
+
+  // send it as an email
   const resetURL = `${req.protocol}://${req.get(
     'host'
   )}/api/v1/users/forgotPassword/${resetToken}`;
@@ -173,8 +188,11 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
   });
 });
 
+// @desc    Reset password
+// @route   POST /api/v1/auth/resetPassword
+// @access  Public
 exports.resetPassword = catchAsynch(async (req, res, next) => {
-  //get user based on token
+  // get user based on token
   const hashedToken = crypto
     .createHash('sha256')
     .update(req.params.token)
@@ -185,7 +203,7 @@ exports.resetPassword = catchAsynch(async (req, res, next) => {
     passwordResetExpires: { $gt: Date.now() }
   });
 
-  //if token not expired, and there is user, set the new password
+  // if token not expired, and there is user, set the new password
   if (!user) {
     return next(new ErrorResponse('Token is invalid or has expired', 400));
   }
@@ -195,12 +213,9 @@ exports.resetPassword = catchAsynch(async (req, res, next) => {
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save();
-  //update changedPasswordAt property for the user
+  // update changedPasswordAt property for the user
 
-  //log user in, send JWT
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
-  });
+  const token = user.getSignedJwtToken();
 
   res.status(200).json({
     status: 'success',
@@ -208,26 +223,41 @@ exports.resetPassword = catchAsynch(async (req, res, next) => {
   });
 });
 
+// @desc    Update password
+// @route   POST /api/v1/auth/updatePassword
+// @access  Private
 exports.updatePassword = catchAsynch(async (req, res, next) => {
-  //get user from collection
+  // get user from collection
   const user = await User.findById(req.user.id).select('+password');
 
-  //check if posted password is correct
+  // check if posted password is correct
   if (!(await user.matchPassword(req.body.passwordCurrent, user.password))) {
     return next(new ErrorResponse('Provided password is incorrect', 400));
   }
-  //if correct update it
+  // if correct update it
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordChangedAt = Date.now() - 1000;
   await user.save();
-  //log the user in, send the JWT
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
-  });
+
+  const token = user.getSignedJwtToken();
 
   res.status(200).json({
     status: 'success',
     token
+  });
+});
+
+// @desc    Log use out / clears cookie
+// @route   GET /api/v1/auth/logout
+// @access  Private
+exports.logout = catchAsynch(async (req, res, next) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 3 * 1000),
+    httpOnly: true
+  });
+
+  res.status(200).json({
+    status: 'success'
   });
 });
