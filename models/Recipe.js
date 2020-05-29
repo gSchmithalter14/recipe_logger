@@ -42,10 +42,8 @@ const recipeSchema = new Schema(
     },
     likes: [
       {
-        user: {
-          type: Schema.ObjectId,
-          ref: 'User'
-        }
+        type: Schema.ObjectId,
+        ref: 'User'
       }
     ]
   },
@@ -83,11 +81,15 @@ recipeSchema.virtual('ingredients', {
   localField: '_id'
 });
 
+// Query middleware
 recipeSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'createdBy',
     select: 'username'
   });
+
+  // .populate('likes');
+
   next();
 });
 

@@ -3,9 +3,9 @@ const User = require('../models/User');
 const catchAsync = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
 
-//@desc    Get all recipes
-//@route   GET /api/v1/recipes
-//@access  Public
+// @desc    Get all recipes
+// @route   GET /api/v1/recipes
+// @access  Public
 exports.getRecipes = catchAsync(async (req, res, next) => {
   const recipes = await Recipe.find();
 
@@ -18,9 +18,9 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Get a recipe by id
-//@route   GET /api/v1/recipes/:id
-//@access  Public
+// @desc    Get a recipe by id
+// @route   GET /api/v1/recipes/:id
+// @access  Public
 exports.getRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id)
     .populate({ path: 'steps', select: 'title description' })
@@ -39,9 +39,9 @@ exports.getRecipe = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Create new recipe
-//@route   POST /api/v1/recipes
-//@access  Private
+// @desc    Create new recipe
+// @route   POST /api/v1/recipes
+// @access  Private
 exports.createRecipe = catchAsync(async (req, res, next) => {
   if (!req.body.createdBy) req.body.createdBy = req.user._id;
 
@@ -56,9 +56,9 @@ exports.createRecipe = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Update a recipe
-//@route   PATCH /api/v1/recipes/:id
-//@access  Private
+// @desc    Update a recipe
+// @route   PATCH /api/v1/recipes/:id
+// @access  Private
 exports.updateRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -78,9 +78,9 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Delete a recipe
-//@route   DELETE /api/v1/recipes/:id
-//@access  Private
+// @desc    Delete a recipe
+// @route   DELETE /api/v1/recipes/:id
+// @access  Private
 exports.deleteRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
 
@@ -96,23 +96,20 @@ exports.deleteRecipe = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Like a recipe
-//@route   PUT /api/v1/recipes/like/:id
-//@access  Private
+// @desc    Like a recipe
+// @route   PUT /api/v1/recipes/like/:id
+// @access  Private
 exports.likeRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
 
-  console.log(recipe);
-
-  // Check if the psot has already been liked
+  // Check if the recipe has already been liked
   if (
-    recipe.likes.filter((like) => like.user.toString() === req.user.id).length >
-    0
+    recipe.likes.filter((like) => like.toString() === req.user.id).length > 0
   ) {
     return next(new ErrorResponse('Recipe already liked', 400));
   }
 
-  recipe.likes.unshift({ user: req.user.id });
+  recipe.likes.unshift(req.user.id);
 
   await recipe.save();
 
@@ -126,22 +123,21 @@ exports.likeRecipe = catchAsync(async (req, res, next) => {
   });
 });
 
-//@desc    Unlike a recipe
-//@route   PUT /api/v1/recipes/unlike/:id
-//@access  Private
+// @desc    Unlike a recipe
+// @route   PUT /api/v1/recipes/unlike/:id
+// @access  Private
 exports.unlikeRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
 
-  // Check if the psot has already been liked
+  // Check if the recipe has already been liked
   if (
-    recipe.likes.filter((like) => like.user.toString() === req.user.id)
-      .length === 0
+    recipe.likes.filter((like) => like.toString() === req.user.id).length === 0
   ) {
     return next(new ErrorResponse('Recipe has not yet been liked', 400));
   }
 
   const removeIndex = recipe.likes.map((like) =>
-    like.user.toString().indexOf(req.user.id)
+    like.toString().indexOf(req.user.id)
   );
 
   recipe.likes.splice(removeIndex, 1);
