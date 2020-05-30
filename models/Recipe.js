@@ -94,3 +94,5 @@ recipeSchema.pre(/^find/, function (next) {
 });
 
 module.exports = mongoose.model('Recipe', recipeSchema);
+
+// move query middleware to controller????

@@ -1,9 +1,10 @@
 const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
+
 const User = require('../models/User');
 const Recipe = require('../models/Recipe');
-const catchAsynch = require('../utils/catchAsync');
+const catchAsync = require('../utils/catchAsync');
 const ErrorResponse = require('../utils/errorResponse');
 const sendEmail = require('../utils/email');
 
@@ -35,7 +36,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @desc    Register a new user
 // @route   POST /api/v1/auth/register
 // @access  Public
-exports.register = catchAsynch(async (req, res, next) => {
+exports.register = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     username: req.body.username,
     email: req.body.email,
@@ -50,7 +51,7 @@ exports.register = catchAsynch(async (req, res, next) => {
 // @desc    Login an existing user
 // @route   POST /api/v1/auth/login
 // @access  Public
-exports.login = catchAsynch(async (req, res, next) => {
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -67,7 +68,7 @@ exports.login = catchAsynch(async (req, res, next) => {
 });
 
 // @desc    Route protection middleware
-exports.protect = catchAsynch(async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   let token;
 
   if (
@@ -143,7 +144,7 @@ exports.isCurrentUser = async (req, res, next) => {
 // @desc    Forgot password
 // @route   POST /api/v1/auth/forgotPassword
 // @access  Public
-exports.forgotPassword = catchAsynch(async (req, res, next) => {
+exports.forgotPassword = catchAsync(async (req, res, next) => {
   // get user based on email
   const user = await User.findOne({ email: req.body.email });
 
@@ -195,7 +196,7 @@ exports.forgotPassword = catchAsynch(async (req, res, next) => {
 // @desc    Reset password
 // @route   POST /api/v1/auth/resetPassword/:token
 // @access  Public
-exports.resetPassword = catchAsynch(async (req, res, next) => {
+exports.resetPassword = catchAsync(async (req, res, next) => {
   // get hashed token
   const hashedToken = crypto
     .createHash('sha256')
@@ -225,7 +226,7 @@ exports.resetPassword = catchAsynch(async (req, res, next) => {
 // @desc    Update password
 // @route   POST /api/v1/auth/updatePassword
 // @access  Private
-exports.updatePassword = catchAsynch(async (req, res, next) => {
+exports.updatePassword = catchAsync(async (req, res, next) => {
   // get user from collection
   const user = await User.findById(req.user.id).select('+password');
 
@@ -245,7 +246,7 @@ exports.updatePassword = catchAsynch(async (req, res, next) => {
 // @desc    Log use out / clears cookie
 // @route   GET /api/v1/auth/logout
 // @access  Private
-exports.logout = catchAsynch(async (req, res, next) => {
+exports.logout = catchAsync(async (req, res, next) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 3 * 1000),
     httpOnly: true

@@ -10,6 +10,11 @@ const ingredientSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'Recipe',
     required: [true, 'Ingredient must belong to a recipe']
+  },
+  createdBy: {
+    type: Schema.ObjectId,
+    ref: 'User',
+    required: [true, 'Ingredient must belong to a user']
   }
 });
 

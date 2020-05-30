@@ -75,7 +75,7 @@ router
 // Equipment Routes
 router
   .route('/:id/equipment')
-  .get(protect, restrictTo('user', 'admin'), getAllEquipment)
+  .get(getAllEquipment)
   .post(protect, restrictTo('user', 'admin'), addEquipment);
 
 router
@@ -87,7 +87,7 @@ router
 // Ingredient Routes
 router
   .route('/:id/ingredients')
-  .get(protect, restrictTo('user', 'admin'), getIngredients)
+  .get(getIngredients)
   .post(protect, restrictTo('user', 'admin'), addIngredient);
 
 router

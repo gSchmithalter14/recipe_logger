@@ -26,6 +26,7 @@ exports.getSteps = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.createStep = catchAsync(async (req, res, next) => {
   if (!req.body.recipe) req.body.recipe = req.params.id;
+  if (!req.body.createdBy) req.body.createdBy = req.user._id;
 
   const newStep = await Step.create(req.body);
 
@@ -48,6 +49,10 @@ exports.getStep = catchAsync(async (req, res, next) => {
     return next(new ErrorResponse('No step found with that ID', 404));
   }
 
+  if (!(step.recipe.toString() === req.params.id)) {
+    return next(new ErrorResponse('No step found with that ID', 404));
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -60,18 +65,29 @@ exports.getStep = catchAsync(async (req, res, next) => {
 //@route   PATCH /api/v1/recipes/:id/steps/:stepId
 //@access  Private
 exports.updateStep = catchAsync(async (req, res, next) => {
-  const step = await Step.findByIdAndUpdate(req.params.stepId, req.body, {
+  let step = await Step.findById(req.params.stepId);
+
+  if (!step) {
+    return next(
+      new ErrorResponse('No recipe instruction found with that ID', 404)
+    );
+  }
+
+  // check if authorized
+  if (step.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse('Not authorized to update this recipe instruction', 403)
+    );
+  }
+
+  step = await Step.findOneAndUpdate(req.params.stepId, req.body, {
     new: true,
     runValidators: true
   });
 
-  if (!step) {
-    return next(new ErrorResponse('No step found with that ID', 404));
-  }
-
   res.status(200).json({
     status: 'success',
-    message: 'Step successfully updated',
+    message: 'Recipe instruction successfully updated',
     data: {
       step
     }
@@ -82,13 +98,21 @@ exports.updateStep = catchAsync(async (req, res, next) => {
 //@route   DELETE /api/v1/recipes/:id/steps/:stepId
 //@access  Private
 exports.deleteStep = catchAsync(async (req, res, next) => {
-  const step = await Step.findByIdAndDelete(req.params.stepId);
+  const step = await Step.findById(req.params.stepId);
+
   if (!step) {
     return next(new ErrorResponse('No step found with that ID', 404));
   }
 
+  // check if authorized
+  if (step.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(new ErrorResponse('Not authorized to delete this step', 403));
+  }
+
+  step.remove();
+
   res.status(200).json({
     status: 'success',
-    message: 'Step deleted'
+    message: 'Recipe instruction removed'
   });
 });

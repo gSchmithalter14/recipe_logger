@@ -19,7 +19,12 @@ const stepSchema = new Schema({
   recipe: {
     type: Schema.ObjectId,
     ref: 'Recipe',
-    required: [true, 'Instruction must belong to a recipe']
+    required: [true, 'Instructions must belong to a recipe']
+  },
+  createdBy: {
+    type: Schema.ObjectId,
+    ref: 'User',
+    required: [true, 'Instruction must belong to a user']
   }
 });
 

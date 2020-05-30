@@ -26,8 +26,7 @@ exports.getIngredients = catchAsync(async (req, res, next) => {
 //@access  Private
 exports.addIngredient = catchAsync(async (req, res, next) => {
   if (!req.body.recipe) req.body.recipe = req.params.id;
-
-  console.log(req.body);
+  if (!req.body.createdBy) req.body.createdBy = req.user._id;
 
   const newIngredient = await Ingredient.create(req.body);
 
@@ -46,8 +45,16 @@ exports.addIngredient = catchAsync(async (req, res, next) => {
 exports.getIngredient = catchAsync(async (req, res, next) => {
   const ingredient = await Ingredient.findById(req.params.ingredientId);
 
+  console.log(ingredient);
+  console.log(req.user.id);
+
   if (!ingredient) {
     return next(new ErrorResponse('No ingredient found with that ID', 404));
+  }
+
+  // check if authorized
+  if (!(req.user.id.toString() === ingredient.createdBy.toString())) {
+    return next(new ErrorResponse('Invalid user', 403));
   }
 
   res.status(200).json({
@@ -62,7 +69,23 @@ exports.getIngredient = catchAsync(async (req, res, next) => {
 //@route   PATCH /api/v1/recipes/:id/ingredients/:ingredientId
 //@access  Private
 exports.updateIngredient = catchAsync(async (req, res, next) => {
-  const ingredient = await Ingredient.findByIdAndUpdate(
+  let ingredient = await Ingredient.findById(req.params.ingredientId);
+
+  if (!ingredient) {
+    return next(new ErrorResponse('No ingredient found with that ID', 404));
+  }
+
+  // check if authorized
+  if (
+    ingredient.createdBy.toString() !== req.user.id &&
+    req.user.role !== 'admin'
+  ) {
+    return next(
+      new ErrorResponse('Not authorized to update this ingredient', 403)
+    );
+  }
+
+  ingredient = await Ingredient.findOneAndUpdate(
     req.params.ingredientId,
     req.body,
     {
@@ -70,10 +93,6 @@ exports.updateIngredient = catchAsync(async (req, res, next) => {
       runValidators: true
     }
   );
-
-  if (!ingredient) {
-    return next(new ErrorResponse('No step found with that ID', 404));
-  }
 
   res.status(200).json({
     status: 'success',
@@ -88,12 +107,23 @@ exports.updateIngredient = catchAsync(async (req, res, next) => {
 //@route   DELETE /api/v1/recipes/:id/ingredients/:ingredientId
 //@access  Private
 exports.deleteIngredient = catchAsync(async (req, res, next) => {
-  const ingredient = await Ingredient.findByIdAndDelete(
-    req.params.ingredientId
-  );
+  const ingredient = await Ingredient.findById(req.params.ingredientId);
+
   if (!ingredient) {
-    return next(new ErrorResponse('No step found with that ID', 404));
+    return next(new ErrorResponse('No ingredient found with that ID', 404));
   }
+
+  // check if authorized
+  if (
+    ingredient.createdBy.toString() !== req.user.id &&
+    req.user.role !== 'admin'
+  ) {
+    return next(
+      new ErrorResponse('Not authorized to delete this ingredient', 403)
+    );
+  }
+
+  ingredient.remove();
 
   res.status(200).json({
     status: 'success',

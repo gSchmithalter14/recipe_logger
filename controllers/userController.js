@@ -9,7 +9,7 @@ const filterObj = (obj, ...allowedFields) => {
   Object.keys(obj).forEach((el) => {
     if (allowedFields.includes(el)) newObj[el] = obj[el];
   });
-  console.log(newObj);
+
   return newObj;
 };
 
@@ -54,8 +54,6 @@ exports.getUser = catchAsynch(async (req, res, next) => {
 //@access  Private
 exports.getMe = catchAsynch(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-
-  console.log(user);
 
   if (!user) {
     return next(
