@@ -1,21 +1,22 @@
-const express = require('express');
+const express = require("express");
 
-const recipeController = require('../controllers/recipeController');
-const authController = require('../controllers/authController');
-const stepController = require('../controllers/stepController');
-const ingredientController = require('../controllers/ingredientController');
-const equipmentController = require('../controllers/equipmentController');
+const recipeController = require("../controllers/recipeController");
+const authController = require("../controllers/authController");
+const stepController = require("../controllers/stepController");
+const ingredientController = require("../controllers/ingredientController");
+const equipmentController = require("../controllers/equipmentController");
 
 const { protect, restrictTo, isCurrentUser } = authController;
 
 const {
   getRecipes,
   getRecipe,
+  getMyRecipes,
   createRecipe,
   updateRecipe,
   deleteRecipe,
   likeRecipe,
-  unlikeRecipe
+  unlikeRecipe,
 } = recipeController;
 
 const {
@@ -23,7 +24,7 @@ const {
   getStep,
   createStep,
   updateStep,
-  deleteStep
+  deleteStep,
 } = stepController;
 
 const {
@@ -31,7 +32,7 @@ const {
   getIngredient,
   addIngredient,
   updateIngredient,
-  deleteIngredient
+  deleteIngredient,
 } = ingredientController;
 
 const {
@@ -39,61 +40,65 @@ const {
   getEquipment,
   addEquipment,
   updateEquipment,
-  deleteEquipment
+  deleteEquipment,
 } = equipmentController;
 
 const router = express.Router();
 
 // Recipe Routes
 router
-  .route('/')
-  .get(protect, restrictTo('user', 'admin'), getRecipes)
-  .post(protect, restrictTo('user', 'admin'), createRecipe);
+  .route("/")
+  .get(protect, restrictTo("user", "admin"), getRecipes)
+  .post(protect, restrictTo("user", "admin"), createRecipe);
 
 router
-  .route('/:id')
-  .get(protect, restrictTo('user', 'admin'), getRecipe)
-  .patch(protect, restrictTo('user', 'admin'), isCurrentUser, updateRecipe)
-  .delete(protect, restrictTo('user', 'admin'), isCurrentUser, deleteRecipe);
+  .route("/myrecipes")
+  .get(protect, restrictTo("user", "admin"), getMyRecipes);
 
-router.route('/like/:id').put(protect, restrictTo('user'), likeRecipe);
+router
+  .route("/:id")
+  .get(protect, restrictTo("user", "admin"), getRecipe)
+  .patch(protect, restrictTo("user", "admin"), isCurrentUser, updateRecipe)
+  .delete(protect, restrictTo("user", "admin"), isCurrentUser, deleteRecipe);
 
-router.route('/unlike/:id').put(protect, restrictTo('user'), unlikeRecipe);
+router.route("/like/:id").put(protect, restrictTo("user"), likeRecipe);
+
+router.route("/unlike/:id").put(protect, restrictTo("user"), unlikeRecipe);
 
 // Step Routes
 router
-  .route('/:id/steps')
-  .get(protect, restrictTo('user', 'admin'), getSteps)
-  .post(protect, restrictTo('user', 'admin'), createStep);
+  .route("/:id/steps")
+  .get(protect, restrictTo("user", "admin"), getSteps)
+  .post(protect, restrictTo("user", "admin"), createStep);
 
 router
-  .route('/:id/steps/:stepId')
-  .get(protect, restrictTo('user', 'admin'), getStep)
-  .patch(protect, restrictTo('user', 'admin'), updateStep)
-  .delete(protect, restrictTo('user', 'admin'), deleteStep);
+  .route("/:id/steps/:stepId")
+  .get(protect, restrictTo("user", "admin"), getStep)
+  .patch(protect, restrictTo("user", "admin"), updateStep)
+  .delete(protect, restrictTo("user", "admin"), deleteStep);
 
 // Equipment Routes
 router
-  .route('/:id/equipment')
+  .route("/:id/equipment")
   .get(getAllEquipment)
-  .post(protect, restrictTo('user', 'admin'), addEquipment);
+  .post(protect, restrictTo("user", "admin"), addEquipment);
 
 router
-  .route('/:id/equipment/:equipmentId')
-  .get(protect, restrictTo('user', 'admin'), getEquipment)
-  .patch(protect, restrictTo('user', 'admin'), updateEquipment)
-  .delete(protect, restrictTo('user', 'admin'), deleteEquipment);
+  .route("/:id/equipment/:equipmentId")
+  .get(protect, restrictTo("user", "admin"), getEquipment)
+  .patch(protect, restrictTo("user", "admin"), updateEquipment)
+  .delete(protect, restrictTo("user", "admin"), deleteEquipment);
 
 // Ingredient Routes
 router
-  .route('/:id/ingredients')
+  .route("/:id/ingredients")
   .get(getIngredients)
-  .post(protect, restrictTo('user', 'admin'), addIngredient);
+  .post(protect, restrictTo("user", "admin"), addIngredient);
 
 router
-  .route('/:id/ingredients/:ingredientId')
-  .get(protect, restrictTo('user', 'admin'), getIngredient)
-  .patch(protect, restrictTo('user', 'admin'), updateIngredient)
-  .delete(protect, restrictTo('user', 'admin'), deleteIngredient);
+  .route("/:id/ingredients/:ingredientId")
+  .get(protect, restrictTo("user", "admin"), getIngredient)
+  .patch(protect, restrictTo("user", "admin"), updateIngredient)
+  .delete(protect, restrictTo("user", "admin"), deleteIngredient);
 
 module.exports = router;

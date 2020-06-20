@@ -1,7 +1,24 @@
-const Recipe = require('../models/Recipe');
-const User = require('../models/User');
-const catchAsync = require('../utils/catchAsync');
-const ErrorResponse = require('../utils/errorResponse');
+const Recipe = require("../models/Recipe");
+const User = require("../models/User");
+const catchAsync = require("../utils/catchAsync");
+const ErrorResponse = require("../utils/errorResponse");
+
+// @desc    Get my recipes
+// @route   GET /api/v1/recipes/myrecipes
+// @access  Public
+exports.getMyRecipes = catchAsync(async (req, res, next) => {
+  const recipes = await Recipe.find({ createdBy: req.user.id });
+
+  if (!recipes.length) res.send("You don't have any recipes");
+
+  res.status(200).json({
+    status: "success",
+    results: recipes.length,
+    data: {
+      recipes,
+    },
+  });
+});
 
 // @desc    Get all recipes
 // @route   GET /api/v1/recipes
@@ -10,11 +27,11 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
   const recipes = await Recipe.find();
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     results: recipes.length,
     data: {
-      recipes
-    }
+      recipes,
+    },
   });
 });
 
@@ -23,19 +40,19 @@ exports.getRecipes = catchAsync(async (req, res, next) => {
 // @access  Public
 exports.getRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id)
-    .populate({ path: 'steps', select: 'title description' })
-    .populate({ path: 'ingredients', select: 'name' })
-    .populate({ path: 'equipment', select: 'name' });
+    .populate({ path: "steps", select: "title description" })
+    .populate({ path: "ingredients", select: "name" })
+    .populate({ path: "equipment", select: "name" });
 
   if (!recipe) {
-    return next(new ErrorResponse('No recipe found with that ID', 404));
+    return next(new ErrorResponse("No recipe found with that ID", 404));
   }
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
-      recipe
-    }
+      recipe,
+    },
   });
 });
 
@@ -48,11 +65,11 @@ exports.createRecipe = catchAsync(async (req, res, next) => {
   const newRecipe = await Recipe.create(req.body);
 
   res.status(201).json({
-    status: 'success',
-    message: 'Recipe successfully created',
+    status: "success",
+    message: "Recipe successfully created",
     data: {
-      recipe: newRecipe
-    }
+      recipe: newRecipe,
+    },
   });
 });
 
@@ -62,19 +79,19 @@ exports.createRecipe = catchAsync(async (req, res, next) => {
 exports.updateRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   if (!recipe) {
-    return next(new ErrorResponse('No recipe found with that ID', 404));
+    return next(new ErrorResponse("No recipe found with that ID", 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    message: 'Recipe successfully updated',
+    status: "success",
+    message: "Recipe successfully updated",
     data: {
-      recipe
-    }
+      recipe,
+    },
   });
 });
 
@@ -85,14 +102,14 @@ exports.deleteRecipe = catchAsync(async (req, res, next) => {
   const recipe = await Recipe.findById(req.params.id);
 
   if (!recipe) {
-    return next(new ErrorResponse('No recipe found with that ID', 404));
+    return next(new ErrorResponse("No recipe found with that ID", 404));
   }
 
   recipe.remove();
 
   res.status(200).json({
-    status: 'success',
-    message: 'Recipe successfully deleted'
+    status: "success",
+    message: "Recipe successfully deleted",
   });
 });
 
@@ -106,7 +123,7 @@ exports.likeRecipe = catchAsync(async (req, res, next) => {
   if (
     recipe.likes.filter((like) => like.toString() === req.user.id).length > 0
   ) {
-    return next(new ErrorResponse('Recipe already liked', 400));
+    return next(new ErrorResponse("Recipe already liked", 400));
   }
 
   recipe.likes.unshift(req.user.id);
@@ -116,10 +133,10 @@ exports.likeRecipe = catchAsync(async (req, res, next) => {
   const likes = recipe.likes.length;
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
-      likes
-    }
+      likes,
+    },
   });
 });
 
@@ -133,7 +150,7 @@ exports.unlikeRecipe = catchAsync(async (req, res, next) => {
   if (
     recipe.likes.filter((like) => like.toString() === req.user.id).length === 0
   ) {
-    return next(new ErrorResponse('Recipe has not yet been liked', 400));
+    return next(new ErrorResponse("Recipe has not yet been liked", 400));
   }
 
   const removeIndex = recipe.likes.map((like) =>
@@ -147,9 +164,9 @@ exports.unlikeRecipe = catchAsync(async (req, res, next) => {
   const likes = recipe.likes.length;
 
   res.status(200).json({
-    status: 'success',
+    status: "success",
     data: {
-      likes
-    }
+      likes,
+    },
   });
 });
